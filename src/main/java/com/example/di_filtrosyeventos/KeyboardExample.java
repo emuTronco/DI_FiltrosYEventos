@@ -2,6 +2,7 @@ package com.example.di_filtrosyeventos;
 
 import java.util.Iterator;
 import java.util.List;
+
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -24,12 +25,15 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public final class KeyboardExample extends Application {
+
+    static final double[] bloqueado = {0};
+
     @Override
     public void start(final Stage stage) {
         final Keyboard keyboard = new Keyboard(new Key(KeyCode.A),
-                                               new Key(KeyCode.S),
-                                               new Key(KeyCode.D),
-                                               new Key(KeyCode.F));
+                new Key(KeyCode.S),
+                new Key(KeyCode.D),
+                new Key(KeyCode.F));
 
         final Scene scene = new Scene(new Group(keyboard.createNode()));
         stage.setScene(scene);
@@ -54,8 +58,8 @@ public final class KeyboardExample extends Application {
             return keyCode;
         }
 
-      
-		public boolean isPressed() {
+
+        public boolean isPressed() {
             return pressedProperty.get();
         }
 
@@ -73,8 +77,8 @@ public final class KeyboardExample extends Application {
                     Bindings.when(pressedProperty)
                             .then(Color.RED)
                             .otherwise(Bindings.when(keyNode.focusedProperty())
-                                               .then(Color.LIGHTGRAY)
-                                               .otherwise(Color.WHITE)));
+                                    .then(Color.LIGHTGRAY)
+                                    .otherwise(Color.WHITE)));
             keyBackground.setStroke(Color.BLACK);
             keyBackground.setStrokeWidth(2);
             keyBackground.setArcWidth(12);
@@ -82,7 +86,7 @@ public final class KeyboardExample extends Application {
 
             final Text keyLabel = new Text(keyCode.getName());
             keyLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-            
+
             keyNode.getChildren().addAll(keyBackground, keyLabel);
 
             return keyNode;
@@ -94,9 +98,9 @@ public final class KeyboardExample extends Application {
             final EventHandler<KeyEvent> keyEventHandler =
                     new EventHandler<KeyEvent>() {
                         public void handle(final KeyEvent keyEvent) {
-                            if (keyEvent.getCode() == KeyCode.ENTER) {
+                            if (keyEvent.getCode() == KeyCode.ENTER && (bloqueado[0] % 2 == 0)) {
                                 setPressed(keyEvent.getEventType()
-                                               == KeyEvent.KEY_PRESSED);
+                                        == KeyEvent.KEY_PRESSED);
 
                                 keyEvent.consume();
                             }
@@ -120,7 +124,7 @@ public final class KeyboardExample extends Application {
             keyboardNode.setPadding(new Insets(6));
 
             final List<Node> keyboardNodeChildren = keyboardNode.getChildren();
-            for (final Key key: keys) {
+            for (final Key key : keys) {
                 keyboardNodeChildren.add(key.createNode());
             }
 
@@ -135,9 +139,11 @@ public final class KeyboardExample extends Application {
                     new EventHandler<KeyEvent>() {
                         public void handle(final KeyEvent keyEvent) {
                             final Key key = lookupKey(keyEvent.getCode());
-                            if (key != null) {
+                            if (keyEvent.getCode() == KeyCode.P) {
+                                bloqueado[0] += 0.5;
+                            } else if (key != null && (bloqueado[0] % 2 == 0)) {
                                 key.setPressed(keyEvent.getEventType()
-                                                   == KeyEvent.KEY_PRESSED);
+                                        == KeyEvent.KEY_PRESSED);
 
                                 keyEvent.consume();
                             }
@@ -148,18 +154,18 @@ public final class KeyboardExample extends Application {
             keyboardNode.setOnKeyReleased(keyEventHandler);
 
             keyboardNode.addEventHandler(KeyEvent.KEY_PRESSED,
-                                         new EventHandler<KeyEvent>() {
-                                             public void handle(
-                                                     final KeyEvent keyEvent) {
-                                                 handleFocusTraversal(
-                                                         keyboardNode,
-                                                         keyEvent);
-                                             }
-                                         });
+                    new EventHandler<KeyEvent>() {
+                        public void handle(
+                                final KeyEvent keyEvent) {
+                            handleFocusTraversal(
+                                    keyboardNode,
+                                    keyEvent);
+                        }
+                    });
         }
 
         private Key lookupKey(final KeyCode keyCode) {
-            for (final Key key: keys) {
+            for (final Key key : keys) {
                 if (key.getKeyCode() == keyCode) {
                     return key;
                 }
@@ -170,28 +176,31 @@ public final class KeyboardExample extends Application {
         private static void handleFocusTraversal(final Parent traversalGroup,
                                                  final KeyEvent keyEvent) {
             final Node nextFocusedNode;
-            switch (keyEvent.getCode()) {
-                case LEFT:
-                    nextFocusedNode =
-                            getPreviousNode(traversalGroup,
-                                            (Node) keyEvent.getTarget());
-                    keyEvent.consume();
-                    break;
-
-                case RIGHT:
-                    nextFocusedNode =
-                            getNextNode(traversalGroup,
+            if (bloqueado[0] % 2 == 0) {
+                switch (keyEvent.getCode()) {
+                    case LEFT:
+                        nextFocusedNode =
+                                getPreviousNode(traversalGroup,
                                         (Node) keyEvent.getTarget());
-                    keyEvent.consume();
-                    break;
+                        keyEvent.consume();
+                        break;
 
-                default:
-                    return;
-            }
+                    case RIGHT:
+                        nextFocusedNode =
+                                getNextNode(traversalGroup,
+                                        (Node) keyEvent.getTarget());
+                        keyEvent.consume();
+                        break;
 
-            if (nextFocusedNode != null) {
-                nextFocusedNode.requestFocus();
+                    default:
+                        return;
+                }
+
+                if (nextFocusedNode != null) {
+                    nextFocusedNode.requestFocus();
+                }
             }
+            keyEvent.consume();
         }
 
         private static Node getNextNode(final Parent parent,
@@ -202,7 +211,7 @@ public final class KeyboardExample extends Application {
             while (childIterator.hasNext()) {
                 if (childIterator.next() == node) {
                     return childIterator.hasNext() ? childIterator.next()
-                                                   : null;
+                            : null;
                 }
             }
 

@@ -25,13 +25,15 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
+import java.util.Map;
 
 public final class DraggablePanelsExample extends Application {
     private final BooleanProperty dragModeActiveProperty =
@@ -73,32 +75,45 @@ public final class DraggablePanelsExample extends Application {
         stage.setTitle("Draggable Panels Example");
         stage.show();
 
-//        for (int i = 0; i < panelsPane.getChildren().size(); i++) {
-//            Group wrapGroup = new Group (panelsPane.getChildren().get(i));
-//            wrapGroup.addEventFilter(MouseEvent.MOUSE_DRAGGED, event -> {
-//                wrapGroupDragged[0] = wrapGroup;
-//            });
-//        }
-        scene.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
+        for (int i = 0; i < panelsPane.getChildren().size(); i++) {
+            Group wrapGroup = (Group) panelsPane.getChildren().get(i);
+            wrapGroup.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
+                //detectar grupo arrastrado y grupo al que dejas
+                for (int j = 0; j < panelsPane.getChildren().size() - 1; j++) {
+                    if (panelsPane.getChildren().get(j).getBoundsInParent().intersects(panelsPane.getChildren().get(j + 1).getBoundsInParent())) {
+                        System.out.println("Chocaron");
+                        System.out.println(panelsPane.getChildren().size());
+                        ObservableList<Node> lista = wrapGroup.getChildren();
+                        panelsPane.getChildren().remove(wrapGroup);
+                        panelsPane.getChildren().get(j);
+                    } else if (panelsPane.getChildren().get(j).getBoundsInParent().intersects(panelsPane.getChildren().get(2).getBoundsInParent())) {
+                        System.out.println("Chocaron 2");
+                        System.out.println(panelsPane.getChildren().size());
+                        panelsPane.getChildren().remove(wrapGroup);
+                    }
 
-        });
-
-        scene.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
-        //detectar grupo arrastrado y grupo al que dejas
-            for (int i = 0; i < panelsPane.getChildren().size() - 1; i++) {
-                if (panelsPane.getChildren().get(i).getBoundsInParent().intersects(panelsPane.getChildren().get(i + 1).getBoundsInParent())) {
-                    System.out.println("Chocaron");
-                    System.out.println(panelsPane.getChildren().size());
-                    Group wrapGroup = new Group(panelsPane.getChildren().get(i));
-                    ObservableList<Node> lista = wrapGroup.getChildren();
-                    panelsPane.getChildren().remove(wrapGroupDragged);
-                } else if (panelsPane.getChildren().get(i).getBoundsInParent().intersects(panelsPane.getChildren().get(2).getBoundsInParent())) {
-                    System.out.println("Chocaron 2");
-                    System.out.println(panelsPane.getChildren().size());
                 }
+            });
+        }
 
-            }
-        });
+
+//        scene.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
+//            //detectar grupo arrastrado y grupo al que dejas
+//            for (int i = 0; i < panelsPane.getChildren().size() - 1; i++) {
+//                if (panelsPane.getChildren().get(i).getBoundsInParent().intersects(panelsPane.getChildren().get(i + 1).getBoundsInParent())) {
+//                    System.out.println("Chocaron");
+//                    System.out.println(panelsPane.getChildren().size());
+//                    Group wrapGroup = new Group(panelsPane.getChildren().get(i));
+//                    ObservableList<Node> lista = wrapGroup.getChildren();
+//                    event.
+//                            panelsPane.getChildren().remove(wrapGroupDragged);
+//                } else if (panelsPane.getChildren().get(i).getBoundsInParent().intersects(panelsPane.getChildren().get(2).getBoundsInParent())) {
+//                    System.out.println("Chocaron 2");
+//                    System.out.println(panelsPane.getChildren().size());
+//                }
+//
+//            }
+//        });
 
     }
 
@@ -285,6 +300,21 @@ public final class DraggablePanelsExample extends Application {
 
     private static void cambiarPadre(Node n1, Node n2) {
 //        n1.getch
+    }
+
+    private static void transferirDraggable(Group g) {
+        g.setOnDragDetected(mouseEvent -> {
+            Dragboard db = g.startDragAndDrop(TransferMode.MOVE);
+            ClipboardContent content = new ClipboardContent();
+            content.putAll((Map<? extends DataFormat, ?>) g.getChildren());
+            db.setContent(content);
+        });
+
+//        g.setOnDragOver(mouseEvent -> {
+//            if (mouseEvent.getDragboard().has) {
+//
+//            }
+//        });
     }
 }
 

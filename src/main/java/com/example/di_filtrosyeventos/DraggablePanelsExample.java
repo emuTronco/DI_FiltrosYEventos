@@ -6,7 +6,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -33,11 +32,12 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.util.Map;
 
 public final class DraggablePanelsExample extends Application {
     private final BooleanProperty dragModeActiveProperty =
             new SimpleBooleanProperty(this, "dragModeActive", true);
+
+    final Pane panelsPane = new Pane();
 
     @Override
     public void start(final Stage stage) {
@@ -47,8 +47,6 @@ public final class DraggablePanelsExample extends Application {
                 makeDraggable(createConfirmationPanel());
         final Node progressPanel =
                 makeDraggable(createProgressPanel());
-
-        final Group[] wrapGroupDragged = {new Group()};
 
         loginPanel.relocate(0, 0);
         confirmationPanel.relocate(0, 75);
@@ -70,51 +68,32 @@ public final class DraggablePanelsExample extends Application {
 
         dragModeActiveProperty.bind(dragModeCheckbox.selectedProperty());
 
-        final Scene scene = new Scene(sceneRoot, 400, 300);
+        final Scene scene = new Scene(sceneRoot, 600, 500);
         stage.setScene(scene);
         stage.setTitle("Draggable Panels Example");
         stage.show();
 
-        for (int i = 0; i < panelsPane.getChildren().size(); i++) {
-            Group wrapGroup = (Group) panelsPane.getChildren().get(i);
-            wrapGroup.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
-                //detectar grupo arrastrado y grupo al que dejas
-                for (int j = 0; j < panelsPane.getChildren().size() - 1; j++) {
-                    if (panelsPane.getChildren().get(j).getBoundsInParent().intersects(panelsPane.getChildren().get(j + 1).getBoundsInParent())) {
-                        System.out.println("Chocaron");
-                        System.out.println(panelsPane.getChildren().size());
-                        ObservableList<Node> lista = wrapGroup.getChildren();
-                        panelsPane.getChildren().remove(wrapGroup);
-                        panelsPane.getChildren().get(j);
-                    } else if (panelsPane.getChildren().get(j).getBoundsInParent().intersects(panelsPane.getChildren().get(2).getBoundsInParent())) {
-                        System.out.println("Chocaron 2");
-                        System.out.println(panelsPane.getChildren().size());
-                        panelsPane.getChildren().remove(wrapGroup);
-                    }
+        filtroCombinar(loginPanel, confirmationPanel, progressPanel);
+        filtroCombinar(confirmationPanel, loginPanel, progressPanel);
+        filtroCombinar(progressPanel, loginPanel, confirmationPanel);
 
+    }
+
+    private void filtroCombinar(Node nodoArrastrado, Node nodo1, Node nodo2) {
+        nodoArrastrado.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
+
+            if (nodoArrastrado.getParent() == nodo1.getParent() || nodoArrastrado.getParent() == nodo2.getParent()) {
+                if (nodoArrastrado.getBoundsInParent().intersects(nodo1.getBoundsInParent())) {
+                    panelsPane.getChildren().remove(nodoArrastrado);
+                    HBox h = (HBox) ((Group) nodo1).getChildren().get(0);
+                    h.getChildren().add(nodoArrastrado);
+                } else if (nodoArrastrado.getBoundsInParent().intersects(nodo2.getBoundsInParent()) && !(nodoArrastrado.getParent() == nodo2)) {
+                    panelsPane.getChildren().remove(nodoArrastrado);
+                    HBox h = (HBox) ((Group) nodo2).getChildren().get(0);
+                    h.getChildren().add(nodoArrastrado);
                 }
-            });
-        }
-
-
-//        scene.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
-//            //detectar grupo arrastrado y grupo al que dejas
-//            for (int i = 0; i < panelsPane.getChildren().size() - 1; i++) {
-//                if (panelsPane.getChildren().get(i).getBoundsInParent().intersects(panelsPane.getChildren().get(i + 1).getBoundsInParent())) {
-//                    System.out.println("Chocaron");
-//                    System.out.println(panelsPane.getChildren().size());
-//                    Group wrapGroup = new Group(panelsPane.getChildren().get(i));
-//                    ObservableList<Node> lista = wrapGroup.getChildren();
-//                    event.
-//                            panelsPane.getChildren().remove(wrapGroupDragged);
-//                } else if (panelsPane.getChildren().get(i).getBoundsInParent().intersects(panelsPane.getChildren().get(2).getBoundsInParent())) {
-//                    System.out.println("Chocaron 2");
-//                    System.out.println(panelsPane.getChildren().size());
-//                }
-//
-//            }
-//        });
-
+            }
+        });
     }
 
     public static void main(final String[] args) {
@@ -291,30 +270,5 @@ public final class DraggablePanelsExample extends Application {
         public double initialTranslateY;
     }
 
-    private static void chocan(Node n1, Node n2) {
-        if (n1.getBoundsInParent().intersects(n2.getBoundsInParent())) {
-            System.out.println("Se chocan");
-        }
-
-    }
-
-    private static void cambiarPadre(Node n1, Node n2) {
-//        n1.getch
-    }
-
-    private static void transferirDraggable(Group g) {
-        g.setOnDragDetected(mouseEvent -> {
-            Dragboard db = g.startDragAndDrop(TransferMode.MOVE);
-            ClipboardContent content = new ClipboardContent();
-            content.putAll((Map<? extends DataFormat, ?>) g.getChildren());
-            db.setContent(content);
-        });
-
-//        g.setOnDragOver(mouseEvent -> {
-//            if (mouseEvent.getDragboard().has) {
-//
-//            }
-//        });
-    }
 }
 
